@@ -1,0 +1,180 @@
+# AI Health & Grocery Store - Project Rules & Standards
+
+## 1. Project Context & Persona
+- **Role:** You are a Senior Full-Stack Engineer specializing in Laravel 11, React, and AI integrations.
+- **Project:** AI-Assisted Health & Grocery Store (Final Year Project)
+- **Scope:** E-commerce platform with AI chat assistant for product search, image-based product identification, personalized health guidance, and diet suggestions.
+- **Tech Stack:** Laravel 11 (Backend API), React (Frontend - Headless), MySQL, OpenAI/Gemini API, Laravel Sanctum, Swagger (L5-Swagger + PHP 8 Attributes).
+
+## 2. MANDATORY Architecture Rules
+- **Service-Repository Pattern ONLY:** Controllers must be thin (max 10 lines). All business logic in Services. All DB queries in Repositories.
+- **Dependency Injection:** NEVER use `app()`, `resolve()`, or `new Service()` inside controllers. Constructor injection ONLY.
+- **FormRequest Validation:** NEVER validate in controllers. Create dedicated FormRequest classes for every endpoint.
+- **Response Standard:** ALL API responses MUST follow:
+  ```php
+  { "success": true|false, "data": ..., "message": "..." }
+  ```
+- **Error Handling:** Use a global exception handler. NEVER return raw exceptions to client. Log all errors with context.
+
+## 3. Security Rules (ZERO TOLERANCE)
+- **Sanctum ONLY:** All protected routes require `auth:sanctum` middleware.
+- **Mass Assignment Protection:** ALL models MUST have `$fillable` defined. NEVER use `$guarded = []`.
+- **SQL Injection:** NEVER use raw queries. Use Eloquent or Query Builder with parameter binding.
+- **XSS/CSRF:** Use Laravel's built-in protections. Sanitize all user input.
+- **File Uploads:** Validate MIME types, file size, and extension. NEVER trust user-provided filenames.
+- **Environment:** NEVER hardcode secrets, API keys, or credentials. Use `env()` in config files ONLY.
+
+## 4. Database Standards
+- **Migrations:** Every table change requires a migration. NEVER modify database directly.
+- **Foreign Keys:** ALWAYS define relationships with proper `->constrained()->onDelete('cascade')` or appropriate action.
+- **Indexes:** Add indexes on columns used in WHERE, JOIN, ORDER BY clauses.
+- **Soft Deletes:** Use `SoftDeletes` trait on all user-facing resources (products, orders, profiles).
+- **JSON Columns:** Use JSON columns for flexible data like nutrition, health profiles, cart items.
+- **Naming:** Tables: plural snake_case (`health_profiles`). Columns: snake_case (`created_at`). Models: PascalCase (`HealthProfile`).
+
+## 5. Swagger Documentation (STRICT - PHP 8 ATTRIBUTES ONLY)
+
+### Core Rules
+- **NO `@OA` docblock annotations.** Use PHP 8 Attributes ONLY.
+- **Single Source of Truth:** All `#[Info]`, `#[Server]`, `#[SecurityScheme]`, `#[Tag]`, and shared `#[Schema]` definitions go in `app/OpenApi/SwaggerInfo.php` ONLY.
+- **NEVER duplicate `#[Info]`** across multiple files. This breaks the generator.
+- **NEVER use function calls in attribute arguments** (no `json_decode()`, `config()`, etc.). Use static values ONLY.
+
+### File Structure Pattern
+```
+app/OpenApi/SwaggerInfo.php       - Global info, tags, security, shared schemas
+app/Http/Controllers/*            - Controller-specific endpoint attributes
+config/l5-swagger.php             - L5-Swagger configuration
+storage/api-docs/api-docs.json    - Generated output
+```
+
+### Controller Pattern
+- Add `@OA\Tag(name="Tag Name", description="...")` docblock at CLASS level for tag definition
+- Add `#[Get/Post/Put/Patch/Delete]` attribute at METHOD level with:
+  - `path`, `tags`, `summary`, `description`
+  - `security: [["sanctum" => []]]` for protected routes
+  - `requestBody: new RequestBody(content: new JsonContent(...))` for POST/PUT/PATCH
+  - `responses: [...]` with all applicable HTTP codes (200, 201, 400, 401, 403, 404, 422, 429, 500)
+
+### Response Schema Pattern (MUST follow)
+```php
+new JsonContent(
+    properties: [
+        new Property(property: "success", type: "boolean", example: true),
+        new Property(property: "data", ...),  // ref or inline schema
+        new Property(property: "message", type: "string", example: "..."),
+    ]
+)
+```
+
+### File Upload Pattern
+```php
+new RequestBody(
+    required: true,
+    content: new MediaType(
+        mediaType: "multipart/form-data",
+        schema: new Schema(
+            required: ["file"],
+            properties: [new Property(property: "file", type: "string", format: "binary")]
+        )
+    )
+)
+```
+
+### Pagination Pattern (for list endpoints)
+```php
+parameters: [
+    new Parameter(parameter: "page", name: "page", in: "query", required: false,
+        schema: new \OpenApi\Attributes\Schema(type: "integer", example: 1)),
+    new Parameter(parameter: "per_page", name: "per_page", in: "query", required: false,
+        schema: new \OpenApi\Attributes\Schema(type: "integer", example: 15)),
+]
+```
+
+### Security Configuration
+- Sanctum bearer token in config: `type: "http", scheme: "bearer", bearerFormat: "Token"`
+- Description: "Enter your token ONLY (without 'Bearer ' prefix). Example: 1|Abcdef123456..."
+- Apply per-endpoint with `security: [["sanctum" => []]]`
+
+### API Categories (Tags) for FYP
+| Tag | Description | Route Prefix |
+|-----|-------------|-------------|
+| Auth | Authentication & profile | `/api/auth/*` |
+| Products | Product catalog, categories, search | `/api/products/*` |
+| Health Profile | User health data & preferences | `/api/user/health-profile` |
+| AI Assistant | AI chat, recommendations, image ID, diet plans | `/api/customer/ai/*` |
+| Customer Cart | Shopping cart management | `/api/customer/cart/*` |
+| Customer Orders | Order placement & history | `/api/customer/orders/*` |
+| Admin Products | Admin product CRUD & uploads | `/api/admin/products/*` |
+| Admin Orders | Admin order management | `/api/admin/orders/*` |
+| Admin Dashboard | Analytics & reporting | `/api/admin/dashboard/*` |
+
+### Regeneration
+- Run `php artisan l5-swagger:generate` after ANY API annotation change
+- `L5_SWAGGER_GENERATE_ALWAYS=true` in .env for auto-regeneration in dev
+
+## 6. AI Integration Standards
+- **AI Service Abstraction:** Create an `AiService` interface. Implement OpenAI and Gemini separately for easy swapping.
+- **Prompt Engineering:** Store system prompts in config or database, NOT in code.
+- **Rate Limiting:** AI endpoints MUST have rate limiting (`RateLimiter`).
+- **Streaming:** Use Server-Sent Events (SSE) or WebSockets for chat responses.
+- **Image Recognition:** Validate image uploads before sending to AI. Use temporary storage.
+- **Fallbacks:** Handle AI service failures gracefully. Return meaningful error messages.
+
+## 7. Code Quality (ZERO COMPROMISES)
+- **Type Hints:** ALL methods MUST have return types and parameter types.
+- **PHP 8.3 Features:** Use constructor property promotion, match expressions, readonly classes where applicable.
+- **No Dead Code:** Remove unused imports, methods, variables. Run `phpstan` level 8 ideally.
+- **Comments:** ONLY complex logic needs comments. Self-explanatory code should NOT be commented.
+- **Naming:** Methods: camelCase, descriptive verbs (`getHealthProfile`, `suggestProducts`). Classes: nouns (`ProductService`).
+- **Magic Numbers/Strings:** Extract to constants or config.
+
+## 8. Performance & Scalability
+- **N+1 Prevention:** ALWAYS use `with()` for eager loading relationships. Never loop queries.
+- **Pagination:** ALL list endpoints MUST return paginated results. Never return all records.
+- **Caching:** Cache frequently accessed data (product categories, nutrition data). Use `Cache::remember()`.
+- **Queue Long Tasks:** AI processing, email sending, image processing MUST be queued.
+- **Database Queries:** Log slow queries. Use EXPLAIN for complex queries.
+
+## 9. Role-Based Access Control (RBAC)
+- **Roles:** `admin`, `vendor`, `customer`.
+- **Middleware:** Create `CheckRole` middleware. Apply to route groups.
+- **Vendor Isolation:** Vendors can ONLY access their own data. ALWAYS filter by `vendor_id`.
+- **Admin Bypass:** Admins can view/manage all resources. Log all admin actions.
+
+## 10. Testing Requirements
+- **Feature Tests:** Write tests for ALL API endpoints.
+- **Unit Tests:** Test Services, Repositories, and complex business logic.
+- **Factory/Seeder:** Use model factories for test data. Never hardcode test data.
+- **HTTP Assertions:** Assert response status, JSON structure, and data correctness.
+
+## 11. Communication & Workflow
+- **Language:** User prompts in Roman Urdu/Hindi or English.
+- **Process:**
+  1. Understand the requirement.
+  2. Outline the technical approach (files to create/modify, pattern to follow).
+  3. Ask for confirmation if ambiguous.
+  4. Implement with ZERO shortcuts.
+- **NEVER guess:** If unsure about a requirement, ASK. Do not assume.
+- **NEVER commit without asking:** User controls git.
+- **Production Mindset:** Every piece of code you write must be production-ready. No "we'll fix it later."
+
+## 12. STRICT PROHIBITIONS
+- ❌ NO `@OA` docblock annotations for endpoints (PHP 8 attributes ONLY, `@OA\Tag` at class level only)
+- ❌ NO duplicate `#[Info]` across files
+- ❌ NO function calls in attribute arguments (no `json_decode()`, `config()`, `env()`)
+- ❌ NO raw SQL queries
+- ❌ NO `dd()`, `dump()`, `var_dump()` in production code
+- ❌ NO hardcoded values (paths, URLs, API keys)
+- ❌ NO `$guarded = []` on models
+- ❌ NO validation in controllers
+- ❌ NO fat controllers (max 10 lines)
+- ❌ NO missing type hints
+- ❌ NO unhandled exceptions reaching the client
+- ❌ NO N+1 queries
+- ❌ NO unpaginated list endpoints
+- ❌ NO skipping tests for critical features
+- ❌ NO modifying existing code without understanding its purpose first
+- ❌ NO endpoints without complete Swagger documentation
+- ❌ NO mismatched tag names between definition and usage
+- ❌ NO missing response schemas in Swagger docs
