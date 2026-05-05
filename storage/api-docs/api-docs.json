@@ -872,7 +872,6 @@
                     "AI Assistant"
                 ],
                 "summary": "Ask AI a question",
-                "description": "Send a question to the AI assistant about products, nutrition, or health. Returns personalized responses based on user's health profile.",
                 "operationId": "860ca9191a340800da26eb0323e0439b",
                 "requestBody": {
                     "required": true,
@@ -910,22 +909,6 @@
                                             "example": true
                                         },
                                         "data": {
-                                            "properties": {
-                                                "response": {
-                                                    "type": "string",
-                                                    "example": "Based on your health profile and goals, I recommend..."
-                                                },
-                                                "suggested_products": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "conversation_id": {
-                                                    "type": "integer",
-                                                    "example": 42
-                                                }
-                                            },
                                             "type": "object"
                                         },
                                         "message": {
@@ -946,9 +929,6 @@
                     },
                     "429": {
                         "description": "Rate limit exceeded"
-                    },
-                    "500": {
-                        "description": "AI service error"
                     }
                 },
                 "security": [
@@ -964,11 +944,10 @@
                     "AI Assistant"
                 ],
                 "summary": "Get AI-suggested questions",
-                "description": "Get a list of suggested questions the user can ask the AI assistant based on their health profile and purchase history.",
                 "operationId": "7ba6daf17535bd0bc3036a2f806e5dbf",
                 "responses": {
                     "200": {
-                        "description": "Suggested questions retrieved",
+                        "description": "Suggestions retrieved",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -978,19 +957,6 @@
                                             "example": true
                                         },
                                         "data": {
-                                            "properties": {
-                                                "suggestions": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "example": [
-                                                        "What are the best foods for heart health?",
-                                                        "Show me low-sugar snacks",
-                                                        "Suggest a high-protein breakfast"
-                                                    ]
-                                                }
-                                            },
                                             "type": "object"
                                         },
                                         "message": {
@@ -1005,9 +971,6 @@
                     },
                     "401": {
                         "description": "Unauthorized"
-                    },
-                    "500": {
-                        "description": "Internal server error"
                     }
                 },
                 "security": [
@@ -1023,7 +986,6 @@
                     "AI Assistant"
                 ],
                 "summary": "Identify product from image",
-                "description": "Upload a product image for AI-powered identification. Returns product details and nutritional information if found in the catalog.",
                 "operationId": "d798fe986306805ed22a75010ff5cf16",
                 "requestBody": {
                     "required": true,
@@ -1046,7 +1008,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Product identified successfully",
+                        "description": "Product identified",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1056,31 +1018,11 @@
                                             "example": true
                                         },
                                         "data": {
-                                            "properties": {
-                                                "identified_product": {
-                                                    "type": "object"
-                                                },
-                                                "confidence": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 0.95
-                                                },
-                                                "nutrition_summary": {
-                                                    "type": "string",
-                                                    "example": "This product is high in protein and low in sugar."
-                                                },
-                                                "healthier_alternatives": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
                                             "type": "object"
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Product identified successfully"
+                                            "example": "Product identified"
                                         }
                                     },
                                     "type": "object"
@@ -1089,16 +1031,13 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid image or file too large"
+                        "description": "Invalid image"
                     },
                     "401": {
                         "description": "Unauthorized"
                     },
                     "422": {
                         "description": "Validation error"
-                    },
-                    "500": {
-                        "description": "AI service error"
                     }
                 },
                 "security": [
@@ -1114,14 +1053,12 @@
                     "AI Assistant"
                 ],
                 "summary": "Get personalized diet plan",
-                "description": "Generate a personalized diet plan based on user's health profile, goals, and dietary preferences.",
                 "operationId": "9fe4975a4fff4648d15e0a8c7fe68425",
                 "parameters": [
                     {
                         "parameter": "duration",
                         "name": "duration",
                         "in": "query",
-                        "description": "Plan duration in days",
                         "required": false,
                         "schema": {
                             "type": "integer",
@@ -1131,7 +1068,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Personalized diet plan generated",
+                        "description": "Diet plan generated",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1141,50 +1078,11 @@
                                             "example": true
                                         },
                                         "data": {
-                                            "properties": {
-                                                "plan": {
-                                                    "type": "string",
-                                                    "example": "7-day vegetarian meal plan focused on..."
-                                                },
-                                                "daily_meals": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "day": {
-                                                                "type": "integer"
-                                                            },
-                                                            "breakfast": {
-                                                                "type": "string"
-                                                            },
-                                                            "lunch": {
-                                                                "type": "string"
-                                                            },
-                                                            "dinner": {
-                                                                "type": "string"
-                                                            },
-                                                            "snacks": {
-                                                                "type": "string"
-                                                            },
-                                                            "recommended_products": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "object"
-                                                                }
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "total_calories": {
-                                                    "type": "integer",
-                                                    "example": 2000
-                                                }
-                                            },
                                             "type": "object"
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Diet plan generated successfully"
+                                            "example": "Diet plan generated"
                                         }
                                     },
                                     "type": "object"
@@ -1197,9 +1095,6 @@
                     },
                     "404": {
                         "description": "Health profile not found"
-                    },
-                    "500": {
-                        "description": "Internal server error"
                     }
                 },
                 "security": [
@@ -1215,14 +1110,12 @@
                     "AI Assistant"
                 ],
                 "summary": "Get chat history",
-                "description": "Retrieve the authenticated user's AI assistant chat conversation history.",
                 "operationId": "f48d1d2f11bd4eeb7b2944083c052a6d",
                 "parameters": [
                     {
                         "parameter": "page",
                         "name": "page",
                         "in": "query",
-                        "description": "Page number",
                         "required": false,
                         "schema": {
                             "type": "integer",
@@ -1233,7 +1126,6 @@
                         "parameter": "per_page",
                         "name": "per_page",
                         "in": "query",
-                        "description": "Items per page",
                         "required": false,
                         "schema": {
                             "type": "integer",
@@ -1253,18 +1145,6 @@
                                             "example": true
                                         },
                                         "data": {
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
                                             "type": "object"
                                         },
                                         "message": {
@@ -1279,9 +1159,6 @@
                     },
                     "401": {
                         "description": "Unauthorized"
-                    },
-                    "500": {
-                        "description": "Internal server error"
                     }
                 },
                 "security": [
