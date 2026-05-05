@@ -60,9 +60,31 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->is('api/*')) {
+                \Illuminate\Support\Facades\Log::error('API Exception', [
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString(),
+                    'url' => $request->fullUrl(),
+                    'method' => $request->method(),
+                    'user_id' => $request->user()?->id,
+                ]);
+
+                $message = 'Internal server error';
+
+                if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+                    $message = $e->getMessage() ?: 'Internal server error';
+                } elseif ($e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+                    $message = 'Resource not found';
+                } elseif ($e instanceof \Illuminate\Database\QueryException) {
+                    $message = 'Database error occurred';
+                } elseif (config('app.debug')) {
+                    $message = $e->getMessage();
+                }
+
                 return response()->json([
                     'success' => false,
-                    'message' => config('app.debug') ? $e->getMessage() : 'Internal server error',
+                    'message' => $message,
                 ], 500);
             }
         });

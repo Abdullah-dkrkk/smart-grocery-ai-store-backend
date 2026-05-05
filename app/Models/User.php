@@ -18,8 +18,16 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
     ];
+
+    public function assignRole(string $role): void
+    {
+        if (!in_array($role, ['admin', 'vendor', 'customer'])) {
+            throw new \InvalidArgumentException("Invalid role: {$role}");
+        }
+
+        $this->update(['role' => $role]);
+    }
 
     protected $hidden = [
         'password',

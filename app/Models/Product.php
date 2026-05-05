@@ -70,6 +70,16 @@ class Product extends Model
         return $this->belongsTo(User::class, 'vendor_id');
     }
 
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+    }
+
+    public function primaryImage(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->where('is_primary', true);
+    }
+
     public function cartItems(): HasMany
     {
         return $this->hasMany(CartItem::class);

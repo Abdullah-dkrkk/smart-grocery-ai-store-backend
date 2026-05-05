@@ -130,7 +130,16 @@ class CustomerOrderController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->errorResponse($e->getMessage(), 400);
+            \Illuminate\Support\Facades\Log::error('Checkout failed', [
+                'user_id' => $request->user()->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            $message = str_contains($e->getMessage(), 'out of stock')
+                ? $e->getMessage()
+                : 'Checkout failed. Please try again.';
+
+            return $this->errorResponse($message, 400);
         }
     }
 

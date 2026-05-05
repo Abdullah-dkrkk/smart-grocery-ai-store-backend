@@ -13,23 +13,23 @@ use App\Http\Controllers\VendorProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:15,1');
 
-    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get('/me', [AuthController::class, 'me']);
+        Route::get('/me', [AuthController::class, 'me'])->middleware('throttle:30,1');
     });
 });
 
 Route::prefix('products')->group(function () {
-    Route::get('/', [ProductController::class, 'index']);
-    Route::get('/categories', [ProductController::class, 'categories']);
-    Route::get('/search', [ProductController::class, 'search']);
-    Route::get('/{id}', [ProductController::class, 'show']);
+    Route::get('/', [ProductController::class, 'index'])->middleware('throttle:60,1');
+    Route::get('/categories', [ProductController::class, 'categories'])->middleware('throttle:60,1');
+    Route::get('/search', [ProductController::class, 'search'])->middleware('throttle:30,1');
+    Route::get('/{id}', [ProductController::class, 'show'])->middleware('throttle:60,1');
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -41,11 +41,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('customer')->group(function () {
         Route::middleware('customer')->group(function () {
             Route::prefix('ai')->group(function () {
-                Route::post('/ask', [AiAssistantController::class, 'ask']);
-                Route::get('/suggestions', [AiAssistantController::class, 'suggestions']);
-                Route::post('/identify', [AiAssistantController::class, 'identify']);
-                Route::get('/diet-plan', [AiAssistantController::class, 'dietPlan']);
-                Route::get('/chat/history', [AiAssistantController::class, 'history']);
+                Route::post('/ask', [AiAssistantController::class, 'ask'])->middleware('throttle:20,1');
+                Route::get('/suggestions', [AiAssistantController::class, 'suggestions'])->middleware('throttle:20,1');
+                Route::post('/identify', [AiAssistantController::class, 'identify'])->middleware('throttle:10,1');
+                Route::get('/diet-plan', [AiAssistantController::class, 'dietPlan'])->middleware('throttle:10,1');
+                Route::get('/chat/history', [AiAssistantController::class, 'history'])->middleware('throttle:30,1');
             });
 
             Route::prefix('cart')->group(function () {
