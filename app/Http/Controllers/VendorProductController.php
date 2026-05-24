@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -334,5 +336,31 @@ class VendorProductController extends Controller
             'out_of_stock_products' => $outOfStockProducts,
             'total_revenue' => (float) $totalRevenue,
         ], 'Vendor stats retrieved');
+    }
+
+    public function analytics(Request $request, $id)
+    {
+        $product = Product::where('vendor_id', $request->user()->id)->findOrFail($id);
+
+        $totalSold = OrderItem::where('product_id', $product->id)
+            ->whereHas('order', fn($q) => $q->whereIn('status', ['delivered', 'shipped']))
+            ->sum('quantity');
+
+        $revenue = OrderItem::where('product_id', $product->id)
+            ->whereHas('order', fn($q) => $q->whereIn('status', ['delivered']))
+            ->sum(DB::raw('quantity * unit_price'));
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total_sold' => (int) $totalSold,
+                'total_revenue' => (float) $revenue,
+                'current_stock' => $product->stock_quantity,
+                'views' => 0,
+                'orders_last_30_days' => OrderItem::where('product_id', $product->id)
+                    ->whereHas('order', fn($q) => $q->where('created_at', '>=', now()->subDays(30)))
+                    ->sum('quantity'),
+            ],
+        ]);
     }
 }

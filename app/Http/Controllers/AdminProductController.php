@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BulkUpdateProductsRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
@@ -300,5 +301,24 @@ class AdminProductController extends Controller
         $path = $request->file('image')->store('products');
 
         return $this->successResponse(['image_url' => Storage::url($path)], 'Image uploaded successfully');
+    }
+
+    public function bulkUpdate(BulkUpdateProductsRequest $request)
+    {
+        $updated = 0;
+
+        foreach ($request->products as $item) {
+            $product = Product::find($item['id']);
+            if (!$product) continue;
+
+            $product->update($item['updates']);
+            $updated++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => ['updated' => $updated],
+            'message' => "{$updated} product(s) updated successfully.",
+        ]);
     }
 }

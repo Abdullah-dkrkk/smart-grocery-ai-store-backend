@@ -41,7 +41,23 @@ class HealthProfileController extends Controller
         $profile = HealthProfile::where('user_id', $request->user()->id)->first();
 
         if (!$profile) {
-            return $this->errorResponse('Health profile not found', 404);
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => null,
+                    'user_id' => $request->user()->id,
+                    'age' => null,
+                    'weight' => null,
+                    'height' => null,
+                    'bmi' => null,
+                    'goals' => null,
+                    'allergies' => [],
+                    'dietary_type' => null,
+                    'activity_level' => null,
+                    'medical_conditions' => null,
+                    'daily_calorie_target' => null,
+                ],
+            ]);
         }
 
         return $this->successResponse($profile, 'Health profile retrieved');

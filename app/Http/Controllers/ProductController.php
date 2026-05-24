@@ -141,6 +141,52 @@ class ProductController extends Controller
             ])),
         ]
     )]
+    public function featured()
+    {
+        $products = Product::where('is_featured', true)
+            ->where('is_active', true)
+            ->with('category')
+            ->inRandomOrder()
+            ->limit(8)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $products,
+        ]);
+    }
+
+    public function nutrition(Request $request)
+    {
+        $query = $request->input('q');
+
+        $products = Product::where('is_active', true)
+            ->whereNotNull('nutrition_data')
+            ->when($query, fn($q) => $q->where('nutrition_data', 'like', "%{$query}%"))
+            ->limit(20)
+            ->get(['id', 'name', 'nutrition_data']);
+
+        return $this->successResponse($products, 'Nutrition data retrieved');
+    }
+
+    public function bulk(Request $request)
+    {
+        $ids = explode(',', $request->input('ids', ''));
+
+        $validated = collect($ids)->filter(fn($id) => is_numeric($id))->values()->toArray();
+
+        if (count($validated) > 50) {
+            return $this->errorResponse('Maximum 50 products per request.', 400);
+        }
+
+        $products = Product::whereIn('id', $validated)
+            ->where('is_active', true)
+            ->with('category')
+            ->get();
+
+        return $this->successResponse($products, 'Products retrieved');
+    }
+
     public function search(Request $request)
     {
         $request->validate([

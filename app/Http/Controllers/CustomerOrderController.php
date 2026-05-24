@@ -204,4 +204,88 @@ class CustomerOrderController extends Controller
 
         return $this->successResponse($order, 'Order details retrieved');
     }
+
+    public function cancel(Request $request, Order $order)
+    {
+        if ($order->user_id !== $request->user()->id) {
+            return $this->errorResponse('Order not found.', 404);
+        }
+
+        if (!in_array($order->status, ['pending', 'processing'])) {
+            return $this->errorResponse('Order cannot be cancelled in its current status.', 400);
+        }
+
+        $order->status = 'cancelled';
+        $order->cancelled_at = now();
+        $order->save();
+
+        foreach ($order->items as $item) {
+            $item->product->increment('stock_quantity', $item->quantity);
+        }
+
+        return $this->successResponse($order->load('items.product'), 'Order cancelled successfully.');
+    }
+
+    public function track(Request $request, Order $order)
+    {
+        if ($order->user_id !== $request->user()->id) {
+            return $this->errorResponse('Order not found.', 404);
+        }
+
+        $timeline = [];
+
+        $timeline[] = [
+            'status' => 'pending',
+            'timestamp' => $order->created_at->toISOString(),
+            'note' => 'Order placed successfully.',
+        ];
+
+        if ($order->paid_at) {
+            $timeline[] = [
+                'status' => 'paid',
+                'timestamp' => $order->paid_at->toISOString(),
+                'note' => 'Payment confirmed.',
+            ];
+        }
+
+        if ($order->status === 'processing' || in_array($order->status, ['shipped', 'delivered'])) {
+            $timeline[] = [
+                'status' => 'processing',
+                'timestamp' => $order->updated_at->toISOString(),
+                'note' => 'Order is being prepared.',
+            ];
+        }
+
+        if ($order->shipped_at) {
+            $timeline[] = [
+                'status' => 'shipped',
+                'timestamp' => $order->shipped_at->toISOString(),
+                'note' => 'Package has been shipped.',
+            ];
+        }
+
+        if ($order->delivered_at) {
+            $timeline[] = [
+                'status' => 'delivered',
+                'timestamp' => $order->delivered_at->toISOString(),
+                'note' => 'Package delivered successfully.',
+            ];
+        }
+
+        if ($order->cancelled_at) {
+            $timeline[] = [
+                'status' => 'cancelled',
+                'timestamp' => $order->cancelled_at->toISOString(),
+                'note' => $order->cancellation_reason ?? 'Order cancelled.',
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'current_status' => $order->status,
+                'timeline' => $timeline,
+            ],
+        ]);
+    }
 }

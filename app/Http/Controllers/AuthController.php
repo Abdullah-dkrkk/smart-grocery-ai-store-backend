@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
+use App\Models\HealthProfile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use OpenApi\Attributes\Post;
 use OpenApi\Attributes\Get;
+use OpenApi\Attributes\Put;
 use OpenApi\Attributes\Tag;
 use OpenApi\Attributes\RequestBody;
 use OpenApi\Attributes\JsonContent;
@@ -61,13 +67,9 @@ class AuthController extends Controller
             new Response(response: 500, description: "Internal server error"),
         ]
     )]
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
+        $validated = $request->validated();
 
         $user = User::create([
             'name' => $validated['name'],
@@ -75,6 +77,8 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
             'role' => 'customer',
         ]);
+
+        HealthProfile::create(['user_id' => $user->id]);
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
@@ -119,12 +123,9 @@ class AuthController extends Controller
             new Response(response: 500, description: "Internal server error"),
         ]
     )]
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $validated = $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
+        $validated = $request->validated();
 
         if (!Auth::attempt($validated)) {
             throw ValidationException::withMessages([
@@ -277,5 +278,69 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         return $this->successResponse($request->user(), 'User profile retrieved');
+    }
+
+    #[Put(
+        path: "/api/auth/change-password",
+        tags: ["Auth"],
+        summary: "Change user password",
+        security: [["sanctum" => []]],
+        requestBody: new RequestBody(required: true, content: new JsonContent(
+            required: ["current_password", "new_password", "new_password_confirmation"],
+            properties: [
+                new Property(property: "current_password", type: "string", format: "password", example: "oldpassword123"),
+                new Property(property: "new_password", type: "string", format: "password", example: "newpassword123"),
+                new Property(property: "new_password_confirmation", type: "string", format: "password", example: "newpassword123"),
+            ]
+        )),
+        responses: [
+            new Response(response: 200, description: "Password changed successfully"),
+            new Response(response: 401, description: "Unauthorized"),
+            new Response(response: 422, description: "Validation error"),
+        ]
+    )]
+    public function changePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'new_password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
+        ]);
+
+        $request->user()->update([
+            'password' => Hash::make($validated['new_password']),
+        ]);
+
+        return $this->successResponse(null, 'Password changed successfully');
+    }
+
+    #[Put(
+        path: "/api/user/profile",
+        tags: ["Auth"],
+        summary: "Update user profile",
+        security: [["sanctum" => []]],
+        requestBody: new RequestBody(required: true, content: new JsonContent(properties: [
+            new Property(property: "name", type: "string", example: "John Doe Updated"),
+            new Property(property: "email", type: "string", format: "email", example: "john_new@example.com"),
+            new Property(property: "phone", type: "string", example: "+1234567890"),
+            new Property(property: "avatar_url", type: "string", example: "https://example.com/avatar.jpg"),
+        ])),
+        responses: [
+            new Response(response: 200, description: "Profile updated successfully"),
+            new Response(response: 401, description: "Unauthorized"),
+            new Response(response: 422, description: "Validation error"),
+        ]
+    )]
+    public function updateProfile(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => ['sometimes', 'string', 'max:255'],
+            'email' => ['sometimes', 'email', Rule::unique('users')->ignore($request->user()->id)],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'avatar_url' => ['nullable', 'url'],
+        ]);
+
+        $request->user()->update($validated);
+
+        return $this->successResponse($request->user()->fresh(), 'Profile updated successfully');
     }
 }

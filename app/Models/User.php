@@ -18,6 +18,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'phone',
+        'avatar_url',
     ];
 
     public function assignRole(string $role): void

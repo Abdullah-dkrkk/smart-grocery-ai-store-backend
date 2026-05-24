@@ -277,6 +277,43 @@ class AiAssistantController extends Controller
         return $this->paginateResponse($messages, 'Chat history retrieved');
     }
 
+    public function nutritionBreakdown($productId)
+    {
+        $product = Product::findOrFail($productId);
+
+        if (!$product->nutrition_data) {
+            return $this->errorResponse('No nutrition data available for this product.', 404);
+        }
+
+        $nutrition = $product->nutrition_data;
+        $breakdown = [
+            'product_name' => $product->name,
+            'serving_size' => $nutrition['serving_size'] ?? '100g',
+            'calories' => $nutrition['calories'] ?? 0,
+            'macros' => [
+                'protein' => $nutrition['protein'] ?? 0,
+                'carbs' => $nutrition['carbs'] ?? 0,
+                'fat' => $nutrition['fat'] ?? 0,
+                'fiber' => $nutrition['fiber'] ?? 0,
+            ],
+            'daily_value_percentages' => [
+                'vitamin_a' => $nutrition['vitamin_a'] ?? 0,
+                'vitamin_c' => $nutrition['vitamin_c'] ?? 0,
+                'calcium' => $nutrition['calcium'] ?? 0,
+                'iron' => $nutrition['iron'] ?? 0,
+            ],
+            'dietary_fit' => [
+                'is_vegetarian' => $nutrition['is_vegetarian'] ?? false,
+                'is_vegan' => $nutrition['is_vegan'] ?? false,
+                'is_gluten_free' => $nutrition['is_gluten_free'] ?? false,
+                'is_keto_friendly' => $nutrition['is_keto_friendly'] ?? false,
+            ],
+            'health_notes' => $nutrition['health_notes'] ?? 'No health notes available.',
+        ];
+
+        return response()->json(['success' => true, 'data' => $breakdown]);
+    }
+
     private function findRelatedProducts(string $message): array
     {
         $keywords = preg_split('/\s+/', strtolower($message));
