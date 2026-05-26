@@ -155,9 +155,25 @@ class GenerateVariationImages extends Command
             $seed = abs(crc32($product->slug . '-' . $variationType)) % 10000;
             $imageUrl = $this->buildPollinationUrl($prompt, $seed);
 
-            $this->comment("  → Downloading: {$variationType}");
+            $imageData = false;
+            $maxRetries = 5;
+            $attempt = 0;
 
-            $imageData = $this->downloadImage($imageUrl);
+            while ($attempt < $maxRetries && $imageData === false) {
+                if ($attempt > 0) {
+                    $delay = 10;
+                    $this->comment("  → Retry {$attempt}/{$maxRetries} after {$delay}s...");
+                    sleep($delay);
+                }
+
+                $attempt++;
+                $this->comment("  → Downloading: {$variationType} (attempt {$attempt})");
+                $imageData = $this->downloadImage($imageUrl);
+
+                if ($imageData === false) {
+                    $this->warn("  ✗ Attempt {$attempt} failed");
+                }
+            }
 
             if ($imageData !== false) {
                 file_put_contents($fullPath, $imageData);
@@ -178,7 +194,7 @@ class GenerateVariationImages extends Command
                 $this->info("  ✓ Saved: {$variationType}");
                 $success++;
             } else {
-                $this->warn("  ✗ Failed: {$variationType}");
+                $this->warn("  ✗ Failed: {$variationType} after {$maxRetries} attempts");
                 $failed++;
             }
         }
@@ -203,8 +219,10 @@ class GenerateVariationImages extends Command
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_TIMEOUT => 120,
-            CURLOPT_CONNECTTIMEOUT => 30,
+            CURLOPT_TIMEOUT => 60,
+            CURLOPT_CONNECTTIMEOUT => 15,
+            CURLOPT_LOW_SPEED_TIME => 30,
+            CURLOPT_LOW_SPEED_LIMIT => 100,
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => false,
             CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',

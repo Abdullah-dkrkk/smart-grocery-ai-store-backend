@@ -93,7 +93,7 @@ class ProductController extends Controller
     )]
     public function show($id)
     {
-        $product = Product::with(['category', 'vendor'])->where('is_active', true)->find($id);
+        $product = Product::with(['category', 'vendor', 'images'])->where('is_active', true)->find($id);
 
         if (!$product) {
             return $this->errorResponse('Product not found', 404);

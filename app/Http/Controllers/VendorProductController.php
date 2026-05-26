@@ -134,7 +134,7 @@ class VendorProductController extends Controller
 
         $product = Product::create($validated);
 
-        return $this->successResponse($product->load('category'), 'Product created successfully', 201);
+        return $this->successResponse($product->load(['category', 'images']), 'Product created successfully', 201);
     }
 
     #[Get(
@@ -159,7 +159,7 @@ class VendorProductController extends Controller
     public function show(Request $request, $id)
     {
         $product = Product::where('vendor_id', $request->user()->id)
-            ->with('category')
+            ->with(['category', 'images'])
             ->find($id);
 
         if (!$product) {
@@ -226,7 +226,7 @@ class VendorProductController extends Controller
 
         $product->update($validated);
 
-        return $this->successResponse($product->load('category'), 'Product updated successfully');
+        return $this->successResponse($product->load(['category', 'images']), 'Product updated successfully');
     }
 
     #[Delete(

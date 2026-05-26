@@ -145,7 +145,7 @@ class AdminProductController extends Controller
 
         $product = Product::create($validated);
 
-        return $this->successResponse($product->load(['category', 'vendor']), 'Product created successfully', 201);
+        return $this->successResponse($product->load(['category', 'vendor', 'images']), 'Product created successfully', 201);
     }
 
     #[Get(
@@ -169,7 +169,7 @@ class AdminProductController extends Controller
     )]
     public function show($id)
     {
-        $product = Product::with(['category', 'vendor'])->find($id);
+        $product = Product::with(['category', 'vendor', 'images'])->find($id);
 
         if (!$product) {
             return $this->errorResponse('Product not found', 404);
@@ -237,7 +237,7 @@ class AdminProductController extends Controller
 
         $product->update($validated);
 
-        return $this->successResponse($product->load(['category', 'vendor']), 'Product updated successfully');
+        return $this->successResponse($product->load(['category', 'vendor', 'images']), 'Product updated successfully');
     }
 
     #[Delete(
