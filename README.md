@@ -1,5 +1,4 @@
 # Smart Grocery AI Store Backend
-<!-- git-keep -->
 
 Laravel 11 backend for an AI-assisted health & grocery store with role-based access control (Admin, Vendor, Customer), Sanctum authentication, and standardized API responses.
 
