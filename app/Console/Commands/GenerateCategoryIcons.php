@@ -15,16 +15,16 @@ class GenerateCategoryIcons extends Command
     private string $iconsDir;
 
     private array $iconMap = [
-        'dairy-eggs'       => ['icon' => 'milk',       'color' => '#3B82F6'],
-        'fresh-produce'    => ['icon' => 'apple',       'color' => '#22C55E'],
-        'meat-seafood'     => ['icon' => 'fish',        'color' => '#EC4899'],
-        'bakery'           => ['icon' => 'wheat',       'color' => '#F59E0B'],
-        'health-wellness'  => ['icon' => 'heart-pulse', 'color' => '#EF4444'],
-        'pantry-staples'   => ['icon' => 'package',     'color' => '#8B5CF6'],
-        'snacks'           => ['icon' => 'cookie',      'color' => '#F97316'],
-        'beverages'        => ['icon' => 'cup-soda',    'color' => '#06B6D4'],
-        'frozen-foods'     => ['icon' => 'snowflake',   'color' => '#0EA5E9'],
-        'specialty-diet'   => ['icon' => 'leaf',        'color' => '#84CC16'],
+        'dairy-eggs'       => ['icon' => 'milk',       'color' => '#059669'],
+        'fresh-produce'    => ['icon' => 'apple',       'color' => '#059669'],
+        'meat-seafood'     => ['icon' => 'fish',        'color' => '#059669'],
+        'bakery'           => ['icon' => 'wheat',       'color' => '#059669'],
+        'health-wellness'  => ['icon' => 'heart-pulse', 'color' => '#059669'],
+        'pantry-staples'   => ['icon' => 'package',     'color' => '#059669'],
+        'snacks'           => ['icon' => 'cookie',      'color' => '#059669'],
+        'beverages'        => ['icon' => 'cup-soda',    'color' => '#059669'],
+        'frozen-foods'     => ['icon' => 'snowflake',   'color' => '#059669'],
+        'specialty-diet'   => ['icon' => 'leaf',        'color' => '#059669'],
     ];
 
     public function __construct()
@@ -88,7 +88,8 @@ class GenerateCategoryIcons extends Command
             }
 
             $svgContent = $this->applyColor($svgContent, $color);
-            $svgContent = $this->addSize($svgContent, 48);
+            $svgContent = $this->addSize($svgContent, 24);
+            $svgContent = $this->thinStroke($svgContent);
 
             file_put_contents($fullPath, $svgContent);
 
@@ -136,8 +137,7 @@ class GenerateCategoryIcons extends Command
 
     private function applyColor(string $svg, string $color): string
     {
-        $svg = preg_replace('/stroke="currentColor"/', "stroke=\"{$color}\"", $svg);
-        return str_replace('stroke="#EF4444"', "stroke=\"{$color}\"", $svg);
+        return preg_replace('/stroke="currentColor"/', "stroke=\"{$color}\"", $svg);
     }
 
     private function addSize(string $svg, int $size): string
@@ -145,5 +145,10 @@ class GenerateCategoryIcons extends Command
         $svg = preg_replace('/(?<!-)width="\d+"/', "width=\"{$size}\"", $svg);
         $svg = preg_replace('/(?<!-)height="\d+"/', "height=\"{$size}\"", $svg);
         return $svg;
+    }
+
+    private function thinStroke(string $svg): string
+    {
+        return preg_replace('/stroke-width="2"/', 'stroke-width="1.5"', $svg);
     }
 }
