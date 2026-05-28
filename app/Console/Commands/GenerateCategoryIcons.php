@@ -18,7 +18,7 @@ class GenerateCategoryIcons extends Command
         'dairy-eggs'       => ['icon' => 'milk',       'color' => '#059669'],
         'fresh-produce'    => ['icon' => 'apple',       'color' => '#059669'],
         'meat-seafood'     => ['icon' => 'fish',        'color' => '#059669'],
-        'bakery'           => ['icon' => 'wheat',       'color' => '#059669'],
+        'bakery'           => ['icon' => 'croissant',   'color' => '#059669'],
         'health-wellness'  => ['icon' => 'heart-pulse', 'color' => '#059669'],
         'pantry-staples'   => ['icon' => 'package',     'color' => '#059669'],
         'snacks'           => ['icon' => 'cookie',      'color' => '#059669'],
