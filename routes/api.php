@@ -1,21 +1,45 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminAnalyticsController;
+use App\Http\Controllers\Admin\AuditLogController as AdminAuditLogController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\NutritionistController as AdminNutritionistController;
+use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\VendorController as AdminVendorController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\AiAssistantController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CustomerAddressController;
 use App\Http\Controllers\CustomerCartController;
+use App\Http\Controllers\CustomerDashboardController;
+use App\Http\Controllers\CustomerNutritionPlanController;
 use App\Http\Controllers\CustomerOrderController;
+use App\Http\Controllers\CustomerPaymentMethodController;
+use App\Http\Controllers\CustomerReviewController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\HealthProfileController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\NutritionistAppointmentController;
+use App\Http\Controllers\NutritionistArticleController;
+use App\Http\Controllers\NutritionistClientController;
+use App\Http\Controllers\NutritionistConsultationController;
+use App\Http\Controllers\NutritionistDashboardController;
+use App\Http\Controllers\NutritionistDietChartController;
+use App\Http\Controllers\NutritionistMealPlanController;
+use App\Http\Controllers\NutritionistProfileController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\VendorDashboardController;
+use App\Http\Controllers\VendorEarningController;
+use App\Http\Controllers\VendorInventoryController;
+use App\Http\Controllers\VendorOrderController;
 use App\Http\Controllers\VendorProductController;
+use App\Http\Controllers\VendorReviewController;
+use App\Http\Controllers\VendorStoreController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +56,7 @@ Route::prefix('auth')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me'])->middleware('throttle:30,1');
+        Route::put('/me', [AuthController::class, 'updateProfile']);
         Route::put('/change-password', [AuthController::class, 'changePassword'])->middleware('throttle:10,1');
     });
 });
@@ -52,7 +77,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('user')->group(function () {
         Route::get('/health-profile', [HealthProfileController::class, 'show']);
         Route::put('/health-profile', [HealthProfileController::class, 'update']);
-        Route::put('/profile', [AuthController::class, 'updateProfile']);
     });
 
     Route::prefix('customer')->group(function () {
@@ -86,6 +110,20 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::delete('/{product}', [WishlistController::class, 'remove']);
             });
 
+            Route::get('/dashboard/overview', [CustomerDashboardController::class, 'overview']);
+
+            Route::apiResource('addresses', CustomerAddressController::class);
+            Route::get('payment-methods', [CustomerPaymentMethodController::class, 'index']);
+            Route::post('payment-methods', [CustomerPaymentMethodController::class, 'store']);
+            Route::delete('payment-methods/{id}', [CustomerPaymentMethodController::class, 'destroy']);
+
+            Route::prefix('nutrition-plans')->group(function () {
+                Route::get('/', [CustomerNutritionPlanController::class, 'index']);
+                Route::get('/{id}', [CustomerNutritionPlanController::class, 'show']);
+            });
+
+            Route::get('/reviews', [CustomerReviewController::class, 'index']);
+
             Route::post('/orders/apply-discount', [DiscountController::class, 'apply'])->middleware('throttle:10,1');
         });
     });
@@ -117,6 +155,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/', [AdminOrderController::class, 'index']);
                 Route::get('/{id}', [AdminOrderController::class, 'show']);
                 Route::put('/{id}/status', [AdminOrderController::class, 'updateStatus']);
+                Route::post('/{id}/refund', [AdminOrderController::class, 'refund']);
             });
 
             Route::prefix('dashboard')->group(function () {
@@ -125,7 +164,15 @@ Route::middleware('auth:sanctum')->group(function () {
             });
 
             Route::apiResource('categories', AdminCategoryController::class);
-            Route::apiResource('users', AdminUserController::class);
+
+            Route::prefix('users')->group(function () {
+                Route::get('/', [AdminUserController::class, 'index']);
+                Route::get('/{id}', [AdminUserController::class, 'show']);
+                Route::put('/{id}', [AdminUserController::class, 'update']);
+                Route::delete('/{id}', [AdminUserController::class, 'destroy']);
+                Route::put('/{id}/approve', [AdminUserController::class, 'approve']);
+                Route::put('/{id}/suspend', [AdminUserController::class, 'suspend']);
+            });
 
             Route::prefix('discounts')->group(function () {
                 Route::get('/', [DiscountController::class, 'index']);
@@ -137,6 +184,33 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::get('/settings', [AdminSettingController::class, 'index']);
             Route::put('/settings', [AdminSettingController::class, 'update']);
+
+            Route::get('/analytics', [AdminAnalyticsController::class, 'index']);
+
+            Route::prefix('payments')->group(function () {
+                Route::get('/', [AdminPaymentController::class, 'index']);
+                Route::get('/{id}', [AdminPaymentController::class, 'show']);
+                Route::put('/{id}/status', [AdminPaymentController::class, 'updateStatus']);
+            });
+
+            Route::prefix('vendors')->group(function () {
+                Route::get('/', [AdminVendorController::class, 'index']);
+                Route::get('/{id}', [AdminVendorController::class, 'show']);
+                Route::put('/{id}/approve', [AdminVendorController::class, 'approve']);
+                Route::put('/{id}/suspend', [AdminVendorController::class, 'suspend']);
+                Route::get('/{id}/products', [AdminVendorController::class, 'products']);
+            });
+
+            Route::prefix('nutritionists')->group(function () {
+                Route::get('/', [AdminNutritionistController::class, 'index']);
+                Route::get('/{id}', [AdminNutritionistController::class, 'show']);
+                Route::put('/{id}/approve', [AdminNutritionistController::class, 'approve']);
+                Route::put('/{id}/suspend', [AdminNutritionistController::class, 'suspend']);
+            });
+
+            Route::prefix('audit-logs')->group(function () {
+                Route::get('/', [AdminAuditLogController::class, 'index']);
+            });
         });
     });
 
@@ -151,6 +225,67 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::delete('/{id}', [VendorProductController::class, 'destroy']);
                 Route::post('/upload-image', [VendorProductController::class, 'uploadImage']);
                 Route::get('/{id}/analytics', [VendorProductController::class, 'analytics'])->middleware('throttle:30,1');
+            });
+
+            Route::get('/dashboard/overview', [VendorDashboardController::class, 'overview']);
+
+            Route::prefix('orders')->group(function () {
+                Route::get('/', [VendorOrderController::class, 'index']);
+                Route::get('/{id}', [VendorOrderController::class, 'show']);
+                Route::put('/{orderId}/items/{itemId}/status', [VendorOrderController::class, 'updateItemStatus']);
+            });
+
+            Route::prefix('inventory')->group(function () {
+                Route::get('/', [VendorInventoryController::class, 'index']);
+                Route::put('/{productId}', [VendorInventoryController::class, 'update']);
+            });
+
+            Route::get('/earnings', [VendorEarningController::class, 'index']);
+
+            Route::prefix('store')->group(function () {
+                Route::get('/', [VendorStoreController::class, 'show']);
+                Route::put('/', [VendorStoreController::class, 'update']);
+            });
+
+            Route::prefix('reviews')->group(function () {
+                Route::get('/', [VendorReviewController::class, 'index']);
+                Route::post('/{id}/reply', [VendorReviewController::class, 'reply']);
+            });
+        });
+    });
+
+    Route::prefix('nutritionist')->group(function () {
+        Route::middleware('nutritionist')->group(function () {
+            Route::get('/dashboard/overview', [NutritionistDashboardController::class, 'overview']);
+
+            Route::prefix('clients')->group(function () {
+                Route::get('/', [NutritionistClientController::class, 'index']);
+                Route::post('/', [NutritionistClientController::class, 'store']);
+                Route::get('/{id}', [NutritionistClientController::class, 'show']);
+            });
+
+            Route::apiResource('meal-plans', NutritionistMealPlanController::class);
+            Route::apiResource('diet-charts', NutritionistDietChartController::class);
+
+            Route::prefix('appointments')->group(function () {
+                Route::get('/', [NutritionistAppointmentController::class, 'index']);
+                Route::post('/', [NutritionistAppointmentController::class, 'store']);
+                Route::get('/{id}', [NutritionistAppointmentController::class, 'show']);
+                Route::put('/{id}/status', [NutritionistAppointmentController::class, 'updateStatus']);
+            });
+
+            Route::prefix('consultations')->group(function () {
+                Route::get('/', [NutritionistConsultationController::class, 'index']);
+                Route::post('/', [NutritionistConsultationController::class, 'store']);
+                Route::get('/{id}', [NutritionistConsultationController::class, 'show']);
+                Route::put('/{id}', [NutritionistConsultationController::class, 'update']);
+            });
+
+            Route::apiResource('articles', NutritionistArticleController::class);
+
+            Route::prefix('profile')->group(function () {
+                Route::get('/', [NutritionistProfileController::class, 'show']);
+                Route::put('/', [NutritionistProfileController::class, 'update']);
             });
         });
     });

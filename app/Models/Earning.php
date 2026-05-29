@@ -6,36 +6,33 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Review extends Model
+class Earning extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'product_id',
+        'vendor_id',
         'order_id',
-        'rating',
-        'comment',
-        'vendor_reply',
-        'vendor_replied_at',
+        'amount',
+        'commission_amount',
+        'net_amount',
+        'status',
+        'paid_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'rating' => 'integer',
-            'vendor_replied_at' => 'datetime',
+            'amount' => 'decimal:2',
+            'commission_amount' => 'decimal:2',
+            'net_amount' => 'decimal:2',
+            'paid_at' => 'datetime',
         ];
     }
 
-    public function user(): BelongsTo
+    public function vendor(): BelongsTo
     {
-        return $this->belongsTo(User::class);
-    }
-
-    public function product(): BelongsTo
-    {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(User::class, 'vendor_id');
     }
 
     public function order(): BelongsTo

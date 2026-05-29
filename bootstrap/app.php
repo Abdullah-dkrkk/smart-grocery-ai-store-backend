@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'vendor' => \App\Http\Middleware\VendorMiddleware::class,
             'customer' => \App\Http\Middleware\CustomerMiddleware::class,
+            'nutritionist' => \App\Http\Middleware\NutritionistMiddleware::class,
             'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         ]);
 

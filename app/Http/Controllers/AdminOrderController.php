@@ -166,4 +166,35 @@ class AdminOrderController extends Controller
 
         return $this->successResponse($order->load(['user', 'items.product']), 'Order status updated');
     }
+
+    public function refund(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'reason' => 'required|string',
+        ]);
+
+        $order = Order::findOrFail($id);
+
+        if ($order->payment_status !== 'paid') {
+            return $this->errorResponse('Order has not been paid', 400);
+        }
+
+        if ($validated['amount'] > $order->total_amount) {
+            return $this->errorResponse('Refund amount cannot exceed order total', 400);
+        }
+
+        $order->update([
+            'payment_status' => 'refunded',
+            'status' => 'cancelled',
+            'cancelled_at' => now(),
+            'cancellation_reason' => 'Refund: ' . $validated['reason'],
+        ]);
+
+        foreach ($order->items as $item) {
+            $item->product?->increment('stock_quantity', $item->quantity);
+        }
+
+        return $this->successResponse($order->load('items.product'), 'Refund processed');
+    }
 }
