@@ -86,6 +86,7 @@ class CustomerOrderController extends Controller
 
                 $orderItems[] = [
                     'product_id' => $cartItem->product_id,
+                    'product_name' => $cartItem->product->name,
                     'quantity' => $cartItem->quantity,
                     'unit_price' => $cartItem->product->price,
                     'subtotal' => $lineTotal,

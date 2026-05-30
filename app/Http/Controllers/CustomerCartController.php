@@ -101,6 +101,13 @@ class CustomerCartController extends Controller
         return $this->successResponse($cartItem->load('product'), 'Item added to cart');
     }
 
+    public function clear(Request $request)
+    {
+        CartItem::where('user_id', $request->user()->id)->delete();
+
+        return $this->successResponse(null, 'Cart cleared');
+    }
+
     #[Delete(
         path: "/api/customer/cart/{id}",
         tags: ["Customer Cart"],
