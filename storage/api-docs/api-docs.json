@@ -2382,7 +2382,7 @@
                     "Products"
                 ],
                 "summary": "AI-powered product search",
-                "operationId": "fe27633457203c0d8aa8cdb66655339e",
+                "operationId": "b30c4d47b9ce3805c3d5442bd337a72f",
                 "parameters": [
                     {
                         "parameter": "q",

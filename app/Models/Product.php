@@ -90,6 +90,11 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
     public function isInStock(): bool
     {
         return $this->stock_quantity > 0;

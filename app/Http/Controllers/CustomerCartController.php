@@ -78,23 +78,35 @@ class CustomerCartController extends Controller
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
+            'mode' => 'sometimes|in:add,set',
         ]);
 
+        $mode = $validated['mode'] ?? 'add';
         $product = Product::find($validated['product_id']);
 
         if (!$product->isInStock()) {
             return $this->errorResponse('Product is out of stock', 400);
         }
 
-        $cartItem = CartItem::updateOrCreate(
-            [
+        $existingItem = CartItem::where('user_id', $request->user()->id)
+            ->where('product_id', $validated['product_id'])
+            ->first();
+
+        if ($existingItem) {
+            if ($mode === 'add') {
+                $existingItem->quantity += $validated['quantity'];
+            } else {
+                $existingItem->quantity = $validated['quantity'];
+            }
+            $existingItem->save();
+            $cartItem = $existingItem;
+        } else {
+            $cartItem = CartItem::create([
                 'user_id' => $request->user()->id,
                 'product_id' => $validated['product_id'],
-            ],
-            [
                 'quantity' => $validated['quantity'],
-            ]
-        );
+            ]);
+        }
 
         $cartItem->load('product');
 

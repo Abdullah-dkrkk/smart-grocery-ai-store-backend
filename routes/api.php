@@ -68,6 +68,7 @@ Route::prefix('products')->group(function () {
     Route::get('/search', [ProductController::class, 'search'])->middleware('throttle:30,1');
     Route::get('/bulk', [ProductController::class, 'bulk'])->middleware('throttle:60,1');
     Route::get('/nutrition', [ProductController::class, 'nutrition'])->middleware('throttle:60,1');
+    Route::get('/slug/{slug}', [ProductController::class, 'bySlug'])->middleware('throttle:60,1');
     Route::get('/{id}', [ProductController::class, 'show'])->middleware('throttle:60,1');
     Route::get('/{id}/reviews', [ReviewController::class, 'index'])->middleware('throttle:60,1');
     Route::post('/{id}/reviews', [ReviewController::class, 'store'])->middleware(['auth:sanctum', 'customer', 'throttle:10,1']);

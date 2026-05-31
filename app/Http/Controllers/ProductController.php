@@ -52,6 +52,12 @@ class ProductController extends Controller
             $query->where('category_id', $request->category_id);
         }
 
+        if ($request->has('category_slug')) {
+            $query->whereHas('category', function ($q) use ($request) {
+                $q->where('slug', $request->category_slug);
+            });
+        }
+
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -60,10 +66,22 @@ class ProductController extends Controller
             });
         }
 
+        if ($request->has('min_price')) {
+            $query->where('price', '>=', $request->min_price);
+        }
+
+        if ($request->has('max_price')) {
+            $query->where('price', '<=', $request->max_price);
+        }
+
+        if ($request->has('rating')) {
+            $query->where('avg_rating', '>=', $request->rating);
+        }
+
         $sortBy = $request->input('sort_by', 'created_at');
         $sortDir = $request->input('sort_dir', 'desc');
 
-        if (in_array($sortBy, ['price', 'name', 'created_at'])) {
+        if (in_array($sortBy, ['price', 'name', 'created_at', 'avg_rating', 'review_count'])) {
             $query->orderBy($sortBy, $sortDir);
         } else {
             $query->latest();
@@ -118,7 +136,14 @@ class ProductController extends Controller
     {
         $categories = Category::whereNull('parent_id')
             ->where('is_active', true)
-            ->with('children')
+            ->withCount(['products' => function ($q) {
+                $q->where('is_active', true);
+            }])
+            ->with(['children' => function ($q) {
+                $q->where('is_active', true)->withCount(['products' => function ($q2) {
+                    $q2->where('is_active', true);
+                }]);
+            }])
             ->orderBy('sort_order')
             ->get();
 
@@ -141,6 +166,23 @@ class ProductController extends Controller
             ])),
         ]
     )]
+    public function bySlug($slug)
+    {
+        $product = Product::with(['category', 'vendor', 'images'])
+            ->where('slug', $slug)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$product) {
+            return $this->errorResponse('Product not found', 404);
+        }
+
+        $product->loadAvg('reviews as avg_rating', 'rating');
+        $product->loadCount('reviews as reviews_count');
+
+        return $this->successResponse($product, 'Product details retrieved');
+    }
+
     public function featured()
     {
         $products = Product::where('is_featured', true)
