@@ -19,6 +19,7 @@ class Order extends Model
         'tax_amount',
         'shipping_cost',
         'discount_amount',
+        'discount_id',
         'total_amount',
         'status',
         'payment_method',
@@ -57,6 +58,11 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function discount(): BelongsTo
+    {
+        return $this->belongsTo(Discount::class);
     }
 
     public function isPending(): bool

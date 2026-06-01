@@ -126,6 +126,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::get('/reviews', [CustomerReviewController::class, 'index']);
 
+            Route::post('/orders/validate-discount', [DiscountController::class, 'validate'])->middleware('throttle:10,1');
             Route::post('/orders/apply-discount', [DiscountController::class, 'apply'])->middleware('throttle:10,1');
         });
     });

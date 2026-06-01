@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\CartItem;
+use App\Models\Discount;
+use App\Models\DiscountUserUsage;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -98,6 +100,32 @@ class CustomerOrderController extends Controller
             $taxAmount = round($subtotal * 0.1, 2);
             $shippingCost = $subtotal > 50 ? 0 : 5.99;
             $discountAmount = 0;
+            $discountId = null;
+            $appliedDiscountCode = null;
+
+            if (!empty($validated['discount_code'])) {
+                $discount = Discount::where('code', strtoupper($validated['discount_code']))->first();
+
+                if ($discount && $discount->isValid(
+                    user: $request->user(),
+                    subtotal: $subtotal,
+                    itemCount: $cartItems->sum('quantity'),
+                    productCategoryIds: $cartItems->pluck('product.category_id')->unique()->toArray(),
+                )) {
+                    $discountAmount = $discount->calculateDiscount($subtotal);
+                    $discountId = $discount->id;
+                    $appliedDiscountCode = $discount->code;
+
+                    $discount->increment('used_count');
+
+                    DiscountUserUsage::create([
+                        'discount_id' => $discount->id,
+                        'user_id' => $request->user()->id,
+                        'used_at' => now(),
+                    ]);
+                }
+            }
+
             $totalAmount = round($subtotal + $taxAmount + $shippingCost - $discountAmount, 2);
 
             $order = Order::create([
@@ -107,6 +135,7 @@ class CustomerOrderController extends Controller
                 'tax_amount' => $taxAmount,
                 'shipping_cost' => $shippingCost,
                 'discount_amount' => $discountAmount,
+                'discount_id' => $discountId,
                 'total_amount' => $totalAmount,
                 'status' => 'pending',
                 'payment_method' => $validated['payment_method'],
