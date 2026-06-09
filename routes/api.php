@@ -8,9 +8,11 @@ use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VendorController as AdminVendorController;
+use App\Http\Controllers\Admin\AnnouncementController as AdminAnnouncementController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminProductController;
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AiAssistantController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CustomerAddressController;
@@ -60,6 +62,8 @@ Route::prefix('auth')->group(function () {
         Route::put('/change-password', [AuthController::class, 'changePassword'])->middleware('throttle:10,1');
     });
 });
+
+Route::get('/announcements', [AnnouncementController::class, 'index'])->middleware('throttle:60,1');
 
 Route::prefix('products')->group(function () {
     Route::get('/', [ProductController::class, 'index'])->middleware('throttle:60,1');
@@ -213,6 +217,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::prefix('audit-logs')->group(function () {
                 Route::get('/', [AdminAuditLogController::class, 'index']);
+            });
+
+            Route::prefix('announcements')->group(function () {
+                Route::get('/', [AdminAnnouncementController::class, 'index']);
+                Route::post('/', [AdminAnnouncementController::class, 'store']);
+                Route::put('/{id}', [AdminAnnouncementController::class, 'update']);
+                Route::delete('/{id}', [AdminAnnouncementController::class, 'destroy']);
             });
         });
     });
