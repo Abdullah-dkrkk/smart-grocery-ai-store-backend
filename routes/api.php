@@ -26,6 +26,7 @@ use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\HealthProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\NutritionistAppointmentController;
+use App\Http\Controllers\PublicArticleController;
 use App\Http\Controllers\NutritionistArticleController;
 use App\Http\Controllers\NutritionistClientController;
 use App\Http\Controllers\NutritionistConsultationController;
@@ -35,6 +36,7 @@ use App\Http\Controllers\NutritionistMealPlanController;
 use App\Http\Controllers\NutritionistProfileController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SiteSettingController;
 use App\Http\Controllers\VendorDashboardController;
 use App\Http\Controllers\VendorEarningController;
 use App\Http\Controllers\VendorInventoryController;
@@ -64,6 +66,9 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::get('/announcements', [AnnouncementController::class, 'index'])->middleware('throttle:60,1');
+Route::get('/site-settings', [SiteSettingController::class, 'index'])->middleware('throttle:60,1');
+Route::get('/articles', [PublicArticleController::class, 'index'])->middleware('throttle:60,1');
+Route::get('/articles/{slug}', [PublicArticleController::class, 'show'])->middleware('throttle:60,1');
 
 Route::prefix('products')->group(function () {
     Route::get('/', [ProductController::class, 'index'])->middleware('throttle:60,1');

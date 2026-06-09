@@ -9,9 +9,14 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            UserSeeder::class,
-            CategorySeeder::class,
-            ProductSeeder::class,
+            ArticleSeeder::class,
         ]);
+
+        // Run UserSeeder if users table is empty
+        if (\App\Models\User::count() === 0) {
+            $this->call([
+                UserSeeder::class,
+            ]);
+        }
     }
 }
