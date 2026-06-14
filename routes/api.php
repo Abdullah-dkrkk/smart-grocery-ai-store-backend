@@ -44,8 +44,13 @@ use App\Http\Controllers\VendorOrderController;
 use App\Http\Controllers\VendorProductController;
 use App\Http\Controllers\VendorReviewController;
 use App\Http\Controllers\VendorStoreController;
+use App\Http\Controllers\VendorStoreController as PublicVendorController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
+
+Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:5,1');
+Route::get('/vendors/{slug}', [PublicVendorController::class, 'publicShow'])->middleware('throttle:60,1');
 
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');

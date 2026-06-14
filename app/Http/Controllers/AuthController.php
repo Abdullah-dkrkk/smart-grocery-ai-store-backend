@@ -75,14 +75,18 @@ class AuthController extends Controller
     {
         $validated = $request->validated();
 
+        $role = in_array($request->input('role'), ['vendor', 'nutritionist']) ? $request->input('role') : 'customer';
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => 'customer',
+            'role' => $role,
         ]);
 
-        HealthProfile::create(['user_id' => $user->id]);
+        if ($role === 'customer') {
+            HealthProfile::create(['user_id' => $user->id]);
+        }
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
