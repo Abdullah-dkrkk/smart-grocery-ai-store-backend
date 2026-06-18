@@ -59,7 +59,7 @@ class VendorProductController extends Controller
         $vendorId = $request->user()->id;
 
         $query = Product::where('vendor_id', $vendorId)
-            ->with('category');
+            ->with(['category', 'images']);
 
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);

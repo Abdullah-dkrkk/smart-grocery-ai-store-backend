@@ -59,7 +59,7 @@ class AdminProductController extends Controller
     )]
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'vendor']);
+        $query = Product::with(['category', 'vendor', 'images']);
 
         if ($request->has('vendor_id')) {
             $query->where('vendor_id', $request->vendor_id);

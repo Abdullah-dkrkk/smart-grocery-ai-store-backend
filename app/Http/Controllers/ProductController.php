@@ -45,7 +45,7 @@ class ProductController extends Controller
     )]
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'vendor'])
+        $query = Product::with(['category', 'vendor', 'images'])
             ->where('is_active', true);
 
         if ($request->has('category_id')) {
@@ -187,7 +187,7 @@ class ProductController extends Controller
     {
         $products = Product::where('is_featured', true)
             ->where('is_active', true)
-            ->with('category')
+            ->with(['category', 'vendor', 'images'])
             ->inRandomOrder()
             ->limit(8)
             ->get();
@@ -223,7 +223,7 @@ class ProductController extends Controller
 
         $products = Product::whereIn('id', $validated)
             ->where('is_active', true)
-            ->with('category')
+            ->with(['category', 'images'])
             ->get();
 
         return $this->successResponse($products, 'Products retrieved');
@@ -236,7 +236,7 @@ class ProductController extends Controller
             'dietary_type' => 'nullable|string',
         ]);
 
-        $query = Product::with(['category'])
+        $query = Product::with(['category', 'images'])
             ->where('is_active', true);
 
         $searchTerms = explode(' ', $request->q);
