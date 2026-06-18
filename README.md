@@ -13,6 +13,13 @@ Laravel 11 backend for an AI-assisted health & grocery store with role-based acc
 - **AI Assistant Integration:** Mocked endpoints for AI-powered product recommendations and dietary advice.
 - **Swagger Documentation:** PHP 8 Attributes for API documentation (no `@OA` docblocks).
 
+## Prerequisites
+
+- PHP 8.2+
+- Composer 2.x
+- MySQL 8.0+ / MariaDB 10.6+
+- Node.js 18+ (for Vite)
+
 ## Setup
 
 1. Clone the repository
