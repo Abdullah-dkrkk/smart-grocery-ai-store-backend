@@ -2,6 +2,8 @@
 
 Laravel 11 backend for an AI-assisted health & grocery store with role-based access control (Admin, Vendor, Customer), Sanctum authentication, and standardized API responses.
 
+> 🔧 Maintained by [Abdullah-dkrkk](https://github.com/Abdullah-dkrkk)
+
 ## Features
 
 - **Role-Based Access Control (RBAC):** Admin, Vendor, and Customer roles with strict middleware isolation.
