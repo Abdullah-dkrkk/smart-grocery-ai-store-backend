@@ -157,6 +157,8 @@ class DiscountController extends Controller
 
         return $this->successResponse([
             'discount' => $discount,
+            'discount_id' => $discount->id,
+            'discount_code' => $discount->code,
             'discount_amount' => $discountAmount,
             'new_subtotal' => round($validated['subtotal'] - $discountAmount, 2),
         ], 'Discount code is valid');

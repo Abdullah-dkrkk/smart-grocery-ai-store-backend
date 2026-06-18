@@ -11,7 +11,7 @@ class WishlistController extends Controller
     public function index(Request $request)
     {
         $items = Wishlist::where('user_id', $request->user()->id)
-            ->with('product.category')
+            ->with(['product.category', 'product.images'])
             ->latest()
             ->get();
 
@@ -31,7 +31,7 @@ class WishlistController extends Controller
             ->first();
 
         if ($existing) {
-            return $this->successResponse($existing->load('product.category'), 'Product already in wishlist');
+            return $this->successResponse($existing->load(['product.category', 'product.images']), 'Product already in wishlist');
         }
 
         $item = Wishlist::create([
@@ -39,7 +39,7 @@ class WishlistController extends Controller
             'product_id' => $productId,
         ]);
 
-        return $this->successResponse($item->load('product.category'), 'Product added to wishlist', 201);
+        return $this->successResponse($item->load(['product.category', 'product.images']), 'Product added to wishlist', 201);
     }
 
     public function remove(Request $request, $productId)
